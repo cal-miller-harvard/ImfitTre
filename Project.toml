@@ -1,0 +1,10 @@
+name = "ImfitTre"
+uuid = "862515c4-38a7-4543-884b-1a4a340fac38"
+authors = ["cal-miller-harvard <22692059+cal-miller-harvard@users.noreply.github.com>"]
+version = "0.1.0"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
+Inflector = "6d011eab-0732-4556-8808-e463c76bf3b6"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
