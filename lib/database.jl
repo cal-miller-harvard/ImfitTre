@@ -1,8 +1,15 @@
 using Mongoc
-using Images
+
+function get_shot(id)
+  id_format = r"^(\d{4})_(\d{2})_(\d{2})_(\d+)$"
+  if id !== nothing && occursin(id_format, id)
+    query = Mongoc.BSON(Dict("_id" => id))
+    return Mongoc.find_one(collection, query)
+  end
+end
 
 function get_image(id)
-  id_format = r"(\d{4})_(\d{2})_(\d{2})_(\d+)_(.+)"
+  id_format = r"^(\d{4})_(\d{2})_(\d{2})_(\d+)_(.+)$"
   if id !== nothing && occursin(id_format, id)
     query = Mongoc.BSON(Dict("_id" => id))
     metadata = Mongoc.find_one(db["fs.files"], query)
