@@ -1,23 +1,25 @@
 using Genie.Router, Genie.Requests, Genie.Renderer.Json
 using Dates
+using Mongoc: as_json
 
 route("/") do
-  serve_static_file("welcome.html")
+  model = @init
+  page(model, ui()) |> html
 end
 
 route("/jsonpayload", method = POST) do
   @show jsonpayload()
   @show rawpayload()
 
-  json(jsonpayload())
+  return json(jsonpayload())
 end
 
 route("/shot") do
   id = params(:id, nothing)
-  return json(get_shot(id))
+  return as_json(get_shot(id))
 end
 
 route("/image") do
   id = params(:id, nothing)
-  return json(get_image(id))
+  return as_json(get_image(id))
 end

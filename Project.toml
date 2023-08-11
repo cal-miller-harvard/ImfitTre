@@ -4,9 +4,14 @@ authors = ["cal-miller-harvard <22692059+cal-miller-harvard@users.noreply.github
 version = "0.1.0"
 
 [deps]
+Base64 = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Inflector = "6d011eab-0732-4556-8808-e463c76bf3b6"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Mongoc = "4fe8b98c-fc19-5c23-8ec2-168ff83495f2"
+Stipple = "4acbeb90-81a0-11ea-1966-bdaff8155998"
+StipplePlotly = "ec984513-233d-481d-95b0-a3b58b97af2b"
+StippleUI = "a3c5d34a-b254-4859-a8fa-b86abb7e84a3"
