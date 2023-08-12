@@ -50,7 +50,6 @@ async def load_images(db, fs, id, camera=None):
             dtype = metadata["dtype"]
             shape = metadata["shape"]
             
-            
             with BytesIO() as output:
                 await fs.download_to_stream(id, output)
                 output.seek(0)

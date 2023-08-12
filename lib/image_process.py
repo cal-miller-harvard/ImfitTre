@@ -51,7 +51,7 @@ def calculateOD(image, config):
 
     return ODCorrected
 
-def np_to_html(image, max_val=None, min_val=None, resize=None):
+def array_to_png(image, max_val=None, min_val=None, resize=None):
     """Converts a numpy array to an HTML image tag.
 
     Args:
@@ -72,8 +72,7 @@ def np_to_html(image, max_val=None, min_val=None, resize=None):
     im = Image.fromarray(rescaled)
     if resize is not None:
         im = im.resize(resize, Image.NEAREST)
-    with BytesIO() as output:
-        im.save(output, format="PNG")
-        contents = output.getvalue()
-    encoded = base64.b64encode(contents).decode("utf-8")
-    return "<img src='data:image/png;base64," + encoded + "'/>"
+    output = BytesIO()
+    im.save(output, format="PNG")
+    output.seek(0)
+    return output

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<script src="static\js\htmx.js">
+</script><script src="static\js\sse.js"></script>
+<head>
+    <title>Dashboard</title>
+    <style>
+        /* Style for the logo */
+        .logo {
+            display: block;
+            margin: 0 auto;
+            width: 48px;
+            height: 48px;
+            background-image: "{{ url_for('static', filename='small_krab.png') }}";
+            background-size: cover;
+        }
+        
+        /* Style for the large images */
+        .large-image {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        /* Style for the grid of six images */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            margin-top: 20px;
+            margin-right: 50px;
+            float: right;
+        }
+        
+        .image-grid img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Style for the text below each image */
+        .image-grid p {
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Style for the grid of two images on the left */
+        .left-image-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-gap: 20px;
+            margin-top: 20px;
+            margin-left: 50px;
+            float: left;
+        }
+
+        .left-image-grid img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Style for the text below each image */
+        .left-image-grid p {
+            margin: 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <header>
+            <div style="display: flex; align-items: center;">
+                <div class="logo" style="margin-right: 10px; margin: 10px; display: inline-block;"></div>
+                <h1 style="display: inline-block; margin: 0;">Dashboard</h1>
+            </div>
+        </header>
+    </header>
+    
+    <main>
+        <div class="row">
+            <div>
+                <label for="autoload">Autoload</label>
+                <input type="checkbox" id="autoload" name="autoload">
+            </div>
+            <div>
+                <label for="shot">Shot</label>
+                <input type="text" id="shot" name="shot">
+            </div>
+            <button id="load-btn">Load</button>
+        </div>
+        <div class="left-image-grid">
+            <div>
+                <img src="frame?camera=Side&dx=400&type=OD&image=|0,0%3E" alt="|0,0> OD">
+                <p>|0,0> OD</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=400&type=OD&image=|1,0%3E">
+                <p>|1,0> OD</p>
+            </div>
+        </div>
+        <div class="image-grid">
+            <div>
+                <img src="frame?camera=Side&dx=200&type=shadow&image=|0,0%3E" alt="|0,0> Shadow">
+                <p>|0,0> Shadow</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=200&type=light&image=|0,0%3E" alt="|0,0> Light">
+                <p>|0,0> Light</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=200&type=dark&image=|0,0%3E" alt="|0,0> Dark">
+                <p>|0,0> Dark</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=200&type=shadow&image=|1,0%3E" alt="|1,0> Shadow">
+                <p>|1,0> Shadow</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=200&type=light&image=|1,0%3E" alt="|0,0> Light">
+                <p>|0,0> Light</p>
+            </div>
+            <div>
+                <img src="frame?camera=Side&dx=200&type=dark&image=|1,0%3E" alt="|1,0> Dark">
+                <p>|1,0> Dark</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
