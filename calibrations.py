@@ -43,15 +43,15 @@ default_fit = {
         "bin": 1,
         "region": {
             "xc": 250,
-            "yc": 250,
+            "yc": 340,
             "w": 85,
             "h": 35
         },
         "path": "side",
         "frames": {
-            "Shadow": 0,
-            "Light": 1,
-            "Dark": 2
+            "shadow": 0,
+            "light": 1,
+            "dark": 2
         },
         "fit function": "gaussian"
     },
@@ -60,15 +60,15 @@ default_fit = {
         "bin": 1,
         "region": {
             "xc": 250,
-            "yc": 250,
+            "yc": 340,
             "w": 85,
             "h": 35
         },
         "path": "side",
         "frames": {
-            "Shadow": 3,
-            "Light": 4,
-            "Dark": 5
+            "shadow": 3,
+            "light": 4,
+            "dark": 5
         },
         "fit function": "gaussian"
     }

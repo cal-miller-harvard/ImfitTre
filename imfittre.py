@@ -3,8 +3,6 @@ from quart_mongo import Mongo
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
 import json
-import re
-import numpy as np
 
 import calibrations
 import lib.image_process as ip
@@ -43,6 +41,25 @@ async def image(shot_id):
         html += "<h1>" + data["_id"] +" "+ k + "</h1>"
         for i in range(v.shape[0]):
             html += ip.np_to_html(v[i])
+    html += "</body></html>"
+    return Response(html, content_type='text/html')
+
+@app.route('/od', defaults={'shot_id': None})
+@app.route('/od/<shot_id>')
+async def od(shot_id):
+    images, data = await db.load_images(mongo.db, fs, shot_id)
+    
+    html = "<html><body>"
+    if shot_id is None:
+        html += """<meta http-equiv="refresh" content="30" />"""
+    for (k, v) in images.items():
+        for (mode, config) in calibrations.default_fit.items():
+            html += "<h1>" + data["_id"] +" "+ k + " " + mode + "</h1>"
+            img = ip.calculateOD(v, config)
+            # determine the size of the image so the width is ~400px
+            scale = 400 / img.shape[1]
+            size = (int(img.shape[1]*scale), int(img.shape[0]*scale))
+            html += ip.np_to_html(img, resize=size)
     html += "</body></html>"
     return Response(html, content_type='text/html')
 

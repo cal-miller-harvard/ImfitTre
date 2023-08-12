@@ -29,6 +29,8 @@ def calculateOD(image, config):
     shadow = image[config["frames"]["shadow"]]
     light = image[config["frames"]["light"]]
     dark = image[config["frames"]["dark"]]
+    species = config["species"]
+    bins = config["bin"]
 
     shadowCrop = crop_frame(shadow, config)
     lightCrop = crop_frame(light, config)
@@ -38,10 +40,7 @@ def calculateOD(image, config):
     s2 = lightCrop - darkCrop
     OD = -np.log(s1/s2)
 
-    species = config["species"]
-
     Ceff = calibrations.CSat[config['path']][species]
-    bins = config["bin"]
     Ceff *= float(bins**2)
 
     ODCorrected = OD + (s2 - s1)/Ceff
@@ -52,9 +51,27 @@ def calculateOD(image, config):
 
     return ODCorrected
 
-def np_to_html(image):
-    rescaled = (255.0 / image.max() * (image - image.min())).astype(np.uint8)
+def np_to_html(image, max_val=None, min_val=None, resize=None):
+    """Converts a numpy array to an HTML image tag.
+
+    Args:
+        image (numpy.ndarray): The image to convert.
+        max_val (float, optional): The maximum value of the image. Pixels greater than max_val will be white. Defaults to None, in which case the maximum value of the image is used.
+        min_val (float, optional): The minimum value of the image. Pixels less than min_val will be black. Defaults to None, in which case the minimum value of the image is used.
+        resize (tuple, optional): The size to resize the image to. Defaults to None, in which case the image is not resized.
+
+    Returns:
+        str: The HTML image tag.
+    """
+    if max_val is None:
+        max_val = image.max()
+    if min_val is None:
+        min_val = image.min()
+    rescaled = np.clip(image, min_val, max_val)
+    rescaled = (255.0 / (max_val - min_val) * (image - min_val)).astype(np.uint8)
     im = Image.fromarray(rescaled)
+    if resize is not None:
+        im = im.resize(resize, Image.NEAREST)
     with BytesIO() as output:
         im.save(output, format="PNG")
         contents = output.getvalue()
