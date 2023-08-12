@@ -1,6 +1,7 @@
 import re
 from io import BytesIO
 import numpy as np
+from async_lru import alru_cache
 
 async def load_shot(db, id, require_image=False):
     """Returns the database entry for a given shot. If no shot is give, returns the most recent shot.
@@ -27,6 +28,28 @@ async def load_shot(db, id, require_image=False):
     
     return data
 
+
+@alru_cache(maxsize=32)
+async def download_image(db, fs, image_id):
+    """Downloads an image from the database.
+
+    Args:
+        db: The database to query.
+        fs: The gridfs to query.
+        image_id (string): The id of the image to download.
+
+    Returns:
+        (numpy.ndarray): The image as a numpy array.
+    """
+    metadata = await db["fs.files"].find_one({"_id": image_id})
+    dtype = metadata["dtype"]
+    shape = metadata["shape"]
+    
+    with BytesIO() as output:
+        await fs.download_to_stream(image_id, output)
+        output.seek(0)
+        return np.frombuffer(output.read(), dtype=dtype).reshape(shape)
+
 async def load_images(db, fs, id, camera=None):
     """Returns the images for a given shot. If no shot is give, returns the images from the most recent shot with images.
     
@@ -45,13 +68,5 @@ async def load_images(db, fs, id, camera=None):
     cameras = {}
     for (k,v) in shot_data["images"].items():
         if camera is None or camera == k:
-            id = v["imageID"]
-            metadata = await db["fs.files"].find_one({"_id": id})
-            dtype = metadata["dtype"]
-            shape = metadata["shape"]
-            
-            with BytesIO() as output:
-                await fs.download_to_stream(id, output)
-                output.seek(0)
-                cameras[k] = np.frombuffer(output.read(), dtype=dtype).reshape(shape)
+            cameras[k] = await download_image(db, fs, v["imageID"])
     return cameras, shot_data

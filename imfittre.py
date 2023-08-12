@@ -13,8 +13,10 @@ import lib.server_sent_events as sses
 # Reorganize the code following https://hackersandslackers.com/flask-application-factory/
 # Make the controls on the dashboard work
 # Make the dashboard look nice
+# Add controls for the view position and image range to the dashboard
+# Add crosshairs to the images, whose position can be set by clicking or through the config or the dashboard
+# Display the images in a prettier color scheme
 # Add a display of the json data to the dashboard
-# Cache images to avoid redundant database queries
 # Fit the images
 # Display the fit results
 # Determine the schema for the fit configuration and results
