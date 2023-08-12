@@ -55,9 +55,9 @@ def array_to_png(image, max_val=None, min_val=None, cmap="inferno"):
 
     Args:
         image (numpy.ndarray): The image to convert.
-        max_val (float, optional): The maximum value of the image. Pixels greater than max_val will be white. Defaults to None, in which case the maximum value of the image is used.
-        min_val (float, optional): The minimum value of the image. Pixels less than min_val will be black. Defaults to None, in which case the minimum value of the image is used.
-        resize (tuple, optional): The size to resize the image to. Defaults to None, in which case the image is not resized.
+        max_val (float, optional): The maximum value of the image. Pixels greater than max_val will be clipped. Defaults to None, in which case the maximum value of the image is used.
+        min_val (float, optional): The minimum value of the image. Pixels less than min_val will be clipped. Defaults to None, in which case the minimum value of the image is used.
+        cmap (str, optional): The matplotlib colormap to use. Defaults to "inferno".
 
     Returns:
         str: The HTML image tag.
