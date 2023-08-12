@@ -15,12 +15,12 @@ import lib.server_sent_events as sses
 # Make the dashboard look nice
 # Add controls for the view position and image range to the dashboard
 # Add crosshairs to the images, whose position can be set by clicking or through the config or the dashboard
-# Display the images in a prettier color scheme
 # Add a display of the json data to the dashboard
 # Fit the images
 # Display the fit results
 # Determine the schema for the fit configuration and results
 # Load the fit results into the database
+# Make the frontend resize the images with pixelated rendering
 
 # Load secrets
 with open('secrets.json', 'r') as f:
@@ -86,8 +86,7 @@ async def image():
     type = request.args.get('type', "OD")
     max_val = request.args.get('max_val', None)
     min_val = request.args.get('min_val', None)
-    dx = request.args.get('dx', None)
-    dy = request.args.get('dy', None)
+    cmap = request.args.get('cmap', "inferno")
 
     config = calibrations.default_fit[image]
 
@@ -99,18 +98,7 @@ async def image():
         frame_num = config["frames"][type]
         array = ip.crop_frame(images[camera][frame_num], config)
 
-    if dx is not None and dy is not None:
-        size = (int(dx), int(dy))
-    elif dx is not None:
-        scale = int(dx) / array.shape[1]
-        size = (int(array.shape[1]*scale), int(array.shape[0]*scale))
-    elif dy is not None:
-        scale = int(dy) / array.shape[0]
-        size = (int(array.shape[1]*scale), int(array.shape[0]*scale))
-    else:
-        size = None
-
-    output = ip.array_to_png(array, max_val, min_val, size)
+    output = ip.array_to_png(array, max_val, min_val, cmap)
     return await send_file(output, mimetype='image/png')
 
 @app.route('/sse_test')

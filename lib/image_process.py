@@ -1,6 +1,5 @@
 import numpy as np
-import base64
-from PIL import Image
+from matplotlib import pyplot as plt
 from io import BytesIO
 
 import calibrations
@@ -51,7 +50,7 @@ def calculateOD(image, config):
 
     return ODCorrected
 
-def array_to_png(image, max_val=None, min_val=None, resize=None):
+def array_to_png(image, max_val=None, min_val=None, cmap="inferno"):
     """Converts a numpy array to an HTML image tag.
 
     Args:
@@ -67,12 +66,7 @@ def array_to_png(image, max_val=None, min_val=None, resize=None):
         max_val = image.max()
     if min_val is None:
         min_val = image.min()
-    rescaled = np.clip(image, min_val, max_val)
-    rescaled = (255.0 / (max_val - min_val) * (image - min_val)).astype(np.uint8)
-    im = Image.fromarray(rescaled)
-    if resize is not None:
-        im = im.resize(resize, Image.NEAREST)
     output = BytesIO()
-    im.save(output, format="PNG")
+    plt.imsave(output, image, cmap=cmap, vmin=min_val, vmax=max_val, format='png')
     output.seek(0)
     return output
