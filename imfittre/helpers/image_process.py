@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from io import BytesIO
 
-import calibrations
+import imfittre.helpers.calibrations as calibrations
 
 def crop_frame(frame, config):
     """Crops a frame according to the given config.
