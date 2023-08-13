@@ -1,7 +1,7 @@
 - [ ] Make a nice dashboard with working controls
-- [ ] Display the images on the dashboard resized with pixelated rendering
 - [ ] Display a tree of the JSON data on the dashboard
 - [ ] Add crosshairs to the images, with positions controllable by the user or config file
 - [ ] Fit the images
 - [ ] Display the fit results
 - [ ] Save the fit results to the database
+- [ ] Configure fits and display based on configs in the database

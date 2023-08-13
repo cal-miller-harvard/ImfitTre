@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import least_squares
 from matplotlib import pyplot as plt
 from io import BytesIO
 
