@@ -1,8 +1,12 @@
 from quart import current_app as app
-from quart import Blueprint, request, send_file
+from quart import Blueprint, request, send_file, abort, make_response, Response
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
-from imfittre.helpers import calibrations, image_process as ip, database as db
+from imfittre.helpers import calibrations
+from imfittre.helpers import image_process as ip
+from imfittre.helpers import database as db
+from imfittre.helpers import server_sent_events as sses
+
 from .. import mongo
 
 data_bp = Blueprint(
@@ -50,3 +54,26 @@ async def frame():
 
     output = ip.array_to_png(array, max_val, min_val, cmap)
     return await send_file(output, mimetype='image/png')
+
+@app.get("/new_shot")
+async def sse():
+    if "text/event-stream" not in request.accept_mimetypes:
+        abort(400)
+
+    async def send_events():
+        async with mongo.db.shots.watch() as stream:
+            async for change in stream:
+                data = ""
+                event = sses.ServerSentEvent(data, event="new_shot")
+                yield event.encode()
+
+    response = await make_response(
+        send_events(),
+        {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Transfer-Encoding': 'chunked',
+        },
+    )
+    response.timeout = None
+    return response
