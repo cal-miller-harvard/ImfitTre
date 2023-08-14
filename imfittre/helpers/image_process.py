@@ -3,10 +3,10 @@ from scipy.optimize import least_squares
 from matplotlib import pyplot as plt
 from io import BytesIO
 
-import imfittre.helpers.calibrations as calibrations
+import imfittre.calibrations as calibrations
 
 def crop_frame(frame, config):
-    """Crops a frame according to the given config.
+    """Crops a frame according to the given config. If no region is given, the entire frame is returned.
 
     Args:
         frame (numpy.ndarray): The frame to crop.
@@ -19,11 +19,20 @@ def crop_frame(frame, config):
     Returns:
         numpy.ndarray: The cropped frame.
     """
+    if "region" not in config:
+        return frame
+    
     xc = config["region"]["xc"]
     yc = config["region"]["yc"]
     w = config["region"]["w"]
     h = config["region"]["h"]
-    return frame[yc-h//2:yc+h//2, xc-w//2:xc+w//2]
+
+    xmin = max(0, xc-w//2)
+    xmax = min(frame.shape[1], xc+w//2)
+    ymin = max(0, yc-h//2)
+    ymax = min(frame.shape[0], yc+h//2)
+
+    return frame[ymin:ymax, xmin:xmax]
 
 def calculateOD(image, config):
     shadow = image[config["frames"]["shadow"]]

@@ -47,13 +47,25 @@ default_fit = {
             "w": 85,
             "h": 35
         },
+        "camera": "Side",
         "path": "side",
         "frames": {
             "shadow": 0,
             "light": 1,
             "dark": 2
         },
-        "fit function": "gaussian"
+        "function": "Gaussian",
+        "params": {
+            "x0": [250, 210, 290],
+            "y0": [340, 325, 355],
+            "A": [1, 0, 5],
+            "sigmax": [20, 1, 30],
+            "sigmay": [5, 1, 30],
+            "theta": 0,
+            "offset": [0, -0.5, 0.5],
+            "gradx": [0, -10, 10],
+            "grady": [0, -10, 10]
+        }
     },
     "|1,0>": {
         "species": "KRb",
@@ -64,12 +76,24 @@ default_fit = {
             "w": 85,
             "h": 35
         },
+        "camera": "Side",
         "path": "side",
         "frames": {
             "shadow": 3,
             "light": 4,
             "dark": 5
         },
-        "fit function": "gaussian"
+        "function": "Gaussian",
+        "params": {
+            "x0": [250, 210, 290],
+            "y0": [340, 325, 355],
+            "A": [1, 0, 5],
+            "sigmax": [20, 1, 30],
+            "sigmay": [5, 1, 30],
+            "theta": 0,
+            "offset": [0, -0.5, 0.5],
+            "gradx": [0, -10, 10],
+            "grady": [0, -10, 10]
+        }
     }
 }
