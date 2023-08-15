@@ -28,6 +28,26 @@ async def load_shot(db, id, require_image=False):
     
     return data
 
+async def update_shot(db, id, update):
+    """Updates a shot in the database.
+
+    Args:
+        db: The database to update.
+        id (string): The id of the shot to update, in the format YYYY_MM_DD_shotnumber.
+        update (dict): The update to apply to the shot.
+
+    Returns:
+        (dict): The updated shot data.
+    """
+    if not re.match(r'^\d{4}_\d{2}_\d{2}_\d+$', id):
+        raise ValueError('Invalid shot format. Please use YYYY_MM_DD_shotnumber.')
+    
+    result = await db.shots.update_one({'_id': id}, {'$set': update})
+    if result.matched_count == 0:
+        raise ValueError('Shot {} not found.'.format(id))
+    
+    return await db.shots.find_one({'_id': id})
+
 
 @alru_cache(maxsize=32)
 async def download_image(db, fs, image_id):

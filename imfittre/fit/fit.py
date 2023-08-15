@@ -28,6 +28,7 @@ async def create_fs():
 @fit_bp.route('/fit', methods=["GET", "POST"])
 async def fit():
     shot_id = request.args.get('shot_id', None)
+    update_db = request.args.get('update_db', False)
 
     # if post request, get config from json
     if request.method == "POST":
@@ -36,4 +37,13 @@ async def fit():
         config = calibrations.default_fit
 
     images, data = await db.load_images(mongo.db, fs, shot_id)
-    return imfit.fit(images, data, config)
+    result = imfit.fit(images, data, config)
+
+    shot_id = data["_id"]
+
+    if update_db:
+        # only replace the fit."name".result subdocument
+        update = {"fit.{}.result".format(k): v  for k, v in result.items()}
+        await db.update_shot(mongo.db, shot_id, update)
+
+    return result
