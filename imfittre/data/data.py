@@ -28,8 +28,9 @@ async def create_fs():
 
 @data_bp.route('/shot')
 async def shot():
+    require_image = request.args.get('require_image', False)
     shot_id = request.args.get('shot_id', None)
-    return await db.load_shot(mongo.db, shot_id)
+    return await db.load_shot(mongo.db, shot_id, require_image)
 
 @data_bp.route('/frame')
 async def frame():
