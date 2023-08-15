@@ -1,6 +1,5 @@
 import numpy as np
 from imfittre.fit.image_fit import Fit
-from imfittre import calibrations
 
 class Gaussian(Fit):
     def fit_function(self, x, y, x0=0, y0=0, A=0, sigmax=0, sigmay=0, theta=0, offset=0, gradx=0, grady=0):
@@ -35,9 +34,9 @@ class Gaussian(Fit):
         im_data = self.data
 
         # Note that this will only work for equal x and y binning
-        px_size = calibrations.PX_SIZE[self.config["path"]]*im_data["binning"][0]
-        eff = calibrations.EFF[self.config["species"]]
-        lmda = calibrations.LAMBDA[self.config["species"]]
+        px_size = self.config["calibrations"]["px_size_um"]*im_data["binning"][0]
+        eff = self.config["calibrations"]["eff"]
+        lmda = self.config["calibrations"]["lambda_m"]
 
         derived = {}
         derived["sigmax_um"] = res["sigmax"]*px_size

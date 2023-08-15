@@ -3,8 +3,6 @@ from scipy.optimize import least_squares
 from matplotlib import pyplot as plt
 from io import BytesIO
 
-import imfittre.calibrations as calibrations
-
 def crop_frame(frame, config):
     """Crops a frame according to the given config. If no region is given, the entire frame is returned.
 
@@ -38,7 +36,7 @@ def calculateOD(image, metadata, config):
     shadow = image[config["frames"]["shadow"]]
     light = image[config["frames"]["light"]]
     dark = image[config["frames"]["dark"]]
-    species = config["species"]
+    Ceff = config["calibrations"]["csat"]
 
     # Note that this will only work for equal x and y binning
     bins = metadata["binning"][0] 
@@ -51,7 +49,6 @@ def calculateOD(image, metadata, config):
     s2 = lightCrop - darkCrop
     OD = -np.log(s1/s2)
 
-    Ceff = calibrations.CSat[config['path']][species]
     Ceff *= bins**2
 
     ODCorrected = OD + (s2 - s1)/Ceff

@@ -1,4 +1,3 @@
-- [ ] Add the calibrations (pixel size, etc.) to the configuration, instead of storing them in calibrations.py. That way, all the information needed to reproduce the results is in the database.
 - [ ] Automatically fit new images as they are added to the database
 - [ ] Make a nice dashboard with working controls
 - [ ] Display a tree of the JSON data on the dashboard

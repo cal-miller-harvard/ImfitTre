@@ -73,6 +73,12 @@ default_fit = {
             "offset": [0, -0.5, 0.5],
             "gradx": [0, -10, 10],
             "grady": [0, -10, 10]
+        },
+        "calibrations": {
+            "px_size_um": 1.718,
+            "eff": 0.82*0.7,
+            "lambda_m": 767e-9,
+            "csat": 4048
         }
     },
     "|1,0>": {
@@ -101,6 +107,12 @@ default_fit = {
             "offset": [0, -0.5, 0.5],
             "gradx": [0, -10, 10],
             "grady": [0, -10, 10]
+        },
+        "calibrations": {
+            "px_size_um": 1.718,
+            "eff": 0.82*0.7,
+            "lambda_m": 767e-9,
+            "csat": 4048
         }
     }
 }
