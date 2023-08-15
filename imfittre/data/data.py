@@ -46,7 +46,7 @@ async def frame():
     images, data = await db.load_images(mongo.db, fs, shot_id, camera)
 
     if type == "OD":
-        array = ip.calculateOD(images[camera], config)
+        array = ip.calculateOD(images[camera], data["images"][camera], config)
     else:
         frame_num = config["frames"][type]
         array = ip.crop_frame(images[camera][frame_num], config)

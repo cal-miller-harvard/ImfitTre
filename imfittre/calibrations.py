@@ -1,7 +1,7 @@
 # The Rb CSat values are computed from the K CSat values, assuming identical transmission through the optics and detection efficiencies. The vertical CSat has not been calibrated recently.
 CSat = {
     "axial": {"K": 2970, "KRb": 2970, "Rb": 2882},
-    "side": {"K": 2188, "KRb": 2188, "Rb": 2123},
+    "side": {"K": 4048, "KRb": 4048, "Rb": 2123},
     "vertical": {"K": 1400, "KRb": 1400, "Rb": 1359}
 }
 
@@ -14,7 +14,7 @@ NA = {
 
 PX_SIZE = {
     "axial": 2.58,
-    "side": 1.785,
+    "side": 1.718,
     "vertical": 0.956
 }
 
@@ -37,10 +37,18 @@ EFF = {
     'KRb': EFF_GSM,
 }
 
+# Imaging wavelength
+LAMBDA_K = 767e-9 # m
+LAMBDA_Rb = 780e-9 # m
+LAMBDA = {
+    'K': LAMBDA_K,
+    'Rb': LAMBDA_Rb,
+    'KRb': LAMBDA_K
+}
+
 default_fit = {
     "|0,0>": {
         "species": "KRb",
-        "bin": 1,
         "region": {
             "xc": 250,
             "yc": 340,
@@ -69,7 +77,6 @@ default_fit = {
     },
     "|1,0>": {
         "species": "KRb",
-        "bin": 1,
         "region": {
             "xc": 250,
             "yc": 340,

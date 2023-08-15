@@ -34,12 +34,14 @@ def crop_frame(frame, config):
 
     return frame[ymin:ymax, xmin:xmax]
 
-def calculateOD(image, config):
+def calculateOD(image, metadata, config):
     shadow = image[config["frames"]["shadow"]]
     light = image[config["frames"]["light"]]
     dark = image[config["frames"]["dark"]]
     species = config["species"]
-    bins = config["bin"]
+
+    # Note that this will only work for equal x and y binning
+    bins = metadata["binning"][0] 
 
     shadowCrop = crop_frame(shadow, config)
     lightCrop = crop_frame(light, config)
@@ -50,7 +52,7 @@ def calculateOD(image, config):
     OD = -np.log(s1/s2)
 
     Ceff = calibrations.CSat[config['path']][species]
-    Ceff *= float(bins**2)
+    Ceff *= bins**2
 
     ODCorrected = OD + (s2 - s1)/Ceff
 

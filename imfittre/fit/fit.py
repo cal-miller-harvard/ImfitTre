@@ -36,19 +36,4 @@ async def fit():
         config = calibrations.default_fit
 
     images, data = await db.load_images(mongo.db, fs, shot_id)
-    fit_result = imfit.fit(images, config)
-
-    # fit_result is a dictionary of the form {"name": OptimizeResult}. JSON cannot serialize OptimizeResult, so we convert it to a dictionary.
-    out = {}
-    for name, result in fit_result.items():
-        out[name] = {
-            "x": result.x.tolist(),
-            "cost": result.cost,
-            "nfev": result.nfev,
-            "njev": result.njev,
-            "status": result.status,
-            "success": result.success,
-            "message": result.message
-        }
-
-    return out
+    return imfit.fit(images, data, config)

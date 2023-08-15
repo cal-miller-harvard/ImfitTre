@@ -1,9 +1,8 @@
 import numpy as np
 from scipy.optimize import least_squares
 from inspect import signature
-from functools import partial
+from abc import ABC, abstractmethod
 
-from imfittre.fit import fit_functions as ff
 from imfittre.helpers import image_process as ip
 
 STATUS_DICT = {
@@ -15,10 +14,12 @@ STATUS_DICT = {
     4: "both ftol and xtol termination conditions are satisfied",
 }
 
-class Fit:
+class Fit(ABC):
     """Base class for fitting functions to data.
     
     Args:
+        image (numpy.ndarray): The image to fit.
+        data (dict): The image's metadata.
         config (dict): The config to use for fitting. Possible keys:
             "frame" (str): The frame to fit. Should be one of "OD", "shadow", "light", or "dark". Defaults to "OD".
             "region" (dict): The region to fit. If no region is given, the entire frame is fit. Should have keys:
@@ -29,27 +30,44 @@ class Fit:
             "function" (str): The name of the function to fit. Defaults to "Gaussian".
             "params" (dict): The parameters to use for fitting. Each key should be the name of a parameter and each value should either be a number or a list. If a number is given, the parameter is fixed to that value. If a list is given, it should be of the form [initial value, lower bound, upper bound]. This key is required.
     """
-    def __init__(self, config):
+    def __init__(self, image, data, config):
+        self.image = image
+        self.data = data
         self.config = config
         self.frame = config.get("frame", "OD")
         self.region = config.get("region", None)
 
-        function_name = config.get("function", "Gaussian")
-        if function_name == "Gaussian":
-            self.function = ff.Gauss2D
-        else:
-            raise ValueError("Invalid function name.")
-
         self.params = config.get("params", None)
         if self.params is None:
             raise ValueError("No parameters given for fit.")
+            
+        self.result = None
 
+    @abstractmethod
+    def fit_function(self, x, y, **kwargs):
+        """The function to fit. Must be implemented in subclasses.
+        
+        Args:
+            x (numpy.ndarray): The x values at which to evaluate the function.
+            y (numpy.ndarray): The y values at which to evaluate the function.
+            **kwargs: The parameters of the function.
+        
+        Returns:
+            numpy.ndarray: The function evaluated at x and y.
+        """
+        pass
 
-    def fit(self, image):
+    @abstractmethod
+    def post_process(self):
+        """Post-processes the fit, calculating any necessary derived values. Must be implemented in subclasses.
+        """
+        pass
+
+    def fit(self):
         if self.frame == "OD":
-            frame = ip.calculateOD(image, self.config)
+            frame = ip.calculateOD(self.image, self.data, self.config)
         else:
-            frame = ip.crop_frame(image[self.config["frames"][self.frame]], self.config)
+            frame = ip.crop_frame(self.image[self.config["frames"][self.frame]], self.config)
 
         p0 = []
         pmin = []
@@ -58,7 +76,7 @@ class Fit:
         kwargs = {}
         posargs = {}
 
-        function_params = signature(self.function).parameters
+        function_params = signature(self.fit_function).parameters
 
         arg_idx = 0
         for p in function_params:
@@ -90,17 +108,29 @@ class Fit:
         def loss(params):
             for p in posargs:
                 kwargs[p] = params[posargs[p]]
-            return self.function(X, Y, **kwargs).flatten() - frame.flatten()
+            return self.fit_function(X, Y, **kwargs).flatten() - frame.flatten()
         
         result = least_squares(loss, p0, bounds=(pmin, pmax))
-        return result
+        
+        if result.status < 0:
+            raise RuntimeError(STATUS_DICT[result.status])
+        
+        for p in posargs:
+            kwargs[p] = result.x[posargs[p]]
 
+        self.result = {
+            "params": kwargs,
+            "status": STATUS_DICT[result.status]
+        }
 
-def fit(image, config):
+from imfittre.fit import fit_functions as ff
+
+def fit(image, data, config):
     """Fits a given image according to the given config.
 
     Args:
         image (numpy.ndarray): The image to fit.
+        data (dict): The image's metadata.
         config (dict of dict): A dictionary of fits to apply to the image where the keys are the names of the fits and the values are the configs for the fits.
 
     Returns:
@@ -110,7 +140,17 @@ def fit(image, config):
     for name, fit_config in config.items():
         # if image is a dictionary, select the correct camera
         if isinstance(image, dict):
-            fits[name] = Fit(fit_config).fit(image[fit_config["camera"]])
+            im = image[fit_config["camera"]]
         else:
-            fits[name] = Fit(fit_config).fit(image)
+            im = image
+
+        if fit_config["function"] == "Gaussian":
+            fit_class = ff.Gaussian
+        else:
+            raise ValueError("Function {} not recognized.".format(fit_config["function"]))
+        
+        f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
+        f.fit()
+        f.post_process()
+        fits[name] = f.result
     return fits
