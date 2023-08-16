@@ -27,7 +27,7 @@ class Fit(ABC):
                 "yc" (int): The y coordinate of the center of the region.
                 "w" (int): The width of the region.
                 "h" (int): The height of the region.
-            "function" (str): The name of the function to fit. Defaults to "Gaussian".
+            "fit_function" (str): The name of the function to fit. Defaults to "Gaussian".
             "params" (dict): The parameters to use for fitting. Each key should be the name of a parameter and each value should either be a number or a list. If a number is given, the parameter is fixed to that value. If a list is given, it should be of the form [initial value, lower bound, upper bound]. This key is required.
     """
     def __init__(self, image, data, config):
@@ -144,10 +144,10 @@ def fit(image, data, config):
         else:
             im = image
 
-        if fit_config["function"] == "Gaussian":
+        if fit_config["fit_function"] == "Gaussian":
             fit_class = ff.Gaussian
         else:
-            raise ValueError("Function {} not recognized.".format(fit_config["function"]))
+            raise ValueError("Fit function {} not recognized.".format(fit_config["function"]))
         
         f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
         f.fit()

@@ -1,4 +1,3 @@
-- [ ] Automatically fit new images as they are added to the database
 - [ ] Make a nice dashboard with working controls
 - [ ] Display a tree of the JSON data on the dashboard
 - [ ] Add crosshairs to the images, with positions controllable by the user or config file

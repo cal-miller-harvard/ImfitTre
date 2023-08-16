@@ -62,7 +62,7 @@ default_fit = {
             "light": 1,
             "dark": 2
         },
-        "function": "Gaussian",
+        "fit_function": "Gaussian",
         "params": {
             "x0": [250, 210, 290],
             "y0": [340, 325, 355],
@@ -96,7 +96,7 @@ default_fit = {
             "light": 4,
             "dark": 5
         },
-        "function": "Gaussian",
+        "fit_function": "Gaussian",
         "params": {
             "x0": [250, 210, 290],
             "y0": [340, 325, 355],
