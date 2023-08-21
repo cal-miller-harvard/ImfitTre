@@ -64,10 +64,12 @@ class Fit(ABC):
         pass
 
     def fit(self):
+        binning = self.data["binning"][0]
+
         if self.frame == "OD":
             frame = ip.calculateOD(self.image, self.data, self.config)
         else:
-            frame = ip.crop_frame(self.image[self.config["frames"][self.frame]], self.config)
+            frame = ip.crop_frame(self.image[self.config["frames"][self.frame]], self.config, binning=binning)
 
         p0 = []
         pmin = []
@@ -96,12 +98,17 @@ class Fit(ABC):
                 kwargs[p] = self.params[p]
 
         # offset X and Y relative to the corner of the region
+        # in unbinned pixels
         if self.region is not None:
             x_offset = self.region["xc"] - self.region["w"]//2
             y_offset = self.region["yc"] - self.region["h"]//2
+        else:
+            x_offset = 0
+            y_offset = 0
 
-        x = np.arange(frame.shape[1]) + x_offset
-        y = np.arange(frame.shape[0]) + y_offset
+        # in unbinned pixels
+        x = np.arange(frame.shape[1]) * binning + x_offset
+        y = np.arange(frame.shape[0]) * binning + y_offset
 
         X, Y = np.meshgrid(x, y)
 

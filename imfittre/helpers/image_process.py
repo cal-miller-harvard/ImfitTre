@@ -3,7 +3,7 @@ from scipy.optimize import least_squares
 from matplotlib import pyplot as plt
 from io import BytesIO
 
-def crop_frame(frame, config):
+def crop_frame(frame, config, binning=1):
     """Crops a frame according to the given config. If no region is given, the entire frame is returned.
 
     Args:
@@ -13,6 +13,7 @@ def crop_frame(frame, config):
             yc (int): The y coordinate of the center of the crop.
             w (int): The width of the crop.
             h (int): The height of the crop.
+        binning (int, optional): The bin size of the frame. Defaults to 1.
 
     Returns:
         numpy.ndarray: The cropped frame.
@@ -20,10 +21,10 @@ def crop_frame(frame, config):
     if "region" not in config:
         return frame
     
-    xc = config["region"]["xc"]
-    yc = config["region"]["yc"]
-    w = config["region"]["w"]
-    h = config["region"]["h"]
+    xc = config["region"]["xc"] // binning
+    yc = config["region"]["yc"] // binning
+    w = config["region"]["w"] // binning
+    h = config["region"]["h"] // binning
 
     xmin = max(0, xc-w//2)
     xmax = min(frame.shape[1], xc+w//2)
@@ -41,9 +42,9 @@ def calculateOD(image, metadata, config):
     # Note that this will only work for equal x and y binning
     bins = metadata["binning"][0] 
 
-    shadowCrop = crop_frame(shadow, config)
-    lightCrop = crop_frame(light, config)
-    darkCrop = crop_frame(dark, config)
+    shadowCrop = crop_frame(shadow, config, bins)
+    lightCrop = crop_frame(light, config, bins)
+    darkCrop = crop_frame(dark, config, bins)
 
     s1 = shadowCrop - darkCrop
     s2 = lightCrop - darkCrop
