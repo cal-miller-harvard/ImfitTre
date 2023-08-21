@@ -1,4 +1,4 @@
-from quart import Blueprint, render_template, redirect
+from quart import Blueprint, redirect, send_from_directory
 from quart import current_app as app
 
 home_bp = Blueprint(
@@ -7,10 +7,12 @@ home_bp = Blueprint(
     template_folder='templates',
 )
 
-@home_bp.route('/')
-async def dashboard():
-    return await render_template('dashboard.html')
+# Path for our main Svelte page
+@app.route("/")
+def base():
+    return send_from_directory('client/build', 'index.html')
 
-@home_bp.route('/favicon.ico')
-async def favicon():
-    return redirect('/static/favicon.ico')
+# Path for all the static files (compiled JS/CSS, etc.)
+@app.route("/<path:path>")
+def home(path):
+    return send_from_directory('client/build', path)
