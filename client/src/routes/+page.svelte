@@ -111,7 +111,7 @@
     .image {
         width: 100%;
         margin-bottom: 10px;
-        image-rendering: pixelated;
+        /* image-rendering: pixelated; */
         background-repeat: no-repeat;
         background-size: contain;
     }
@@ -181,11 +181,11 @@
     <div style="display: flex; flex-direction: row; align-items:center; justify-content: left; flex-wrap: wrap;">
         <label>
             Min OD:
-            <input type="number" min="-0.3" max={maxOD} bind:value={minOD} step="0.1" style="max-width: 5em;">
+            <input type="number" min="-0.3" max={maxOD} bind:value={minOD} step="0.1" style="max-width: 5em; margin-right: 10px;">
         </label>
         <label>
             Max OD:
-            <input type="number" min={minOD} max="3.0" bind:value={maxOD} step="0.1" style="max-width: 5em;">
+            <input type="number" min={minOD} max="3.0" bind:value={maxOD} step="0.1" style="max-width: 5em; margin-right: 10px;">
         </label>
         <button on:click={autoOD}>Auto OD</button>
     </div>
@@ -196,7 +196,7 @@
 </nav>
 
 <div class="main">
-    <div style="column-count: 2">
+    <div style="column-count: 2; column-width:400px; column-gap: 20px;">
         {#each images as image}
             <div class="image-container" style="display: block; break-inside: avoid;">
                 <h2>{image.title}</h2>

@@ -98,7 +98,7 @@ def array_to_png(image, max_val=None, min_val=None, cmap="inferno", width=None, 
 
     return output
 
-def fit_to_image(fit, background=None, color="green", thickness=1):
+def fit_to_image(fit, background=None, color="white", thickness=1):
     """Draws an image overlay with the given fit parameters.
 
     Draws a crosshair at params.x0, params.y0 with width params.sigmax, height params.sigmay and angle theta. The background is transparent.
