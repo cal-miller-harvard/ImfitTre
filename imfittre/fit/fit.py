@@ -1,10 +1,14 @@
-from quart import Blueprint, request
+from quart import Blueprint, request, abort, make_response
 from quart import current_app as app
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
 from imfittre.fit import image_fit as imfit
 from imfittre import calibrations
 from imfittre.data import database as db
+from imfittre.helpers.server_sent_events import ServerSentEvent
+
+
+from asyncio import sleep
 
 from .. import mongo
 
@@ -12,6 +16,8 @@ fit_bp = Blueprint(
     'fit_bp',
     __name__
 )
+
+sse_queue = []
 
 async def watch_shots():
     """Watches the database for new shots and updates the list of shots."""
@@ -37,6 +43,30 @@ async def create_fs():
     fs = AsyncIOMotorGridFSBucket(mongo.db)
     app.add_background_task(watch_shots)
 
+@fit_bp.route('/sse')
+async def sse():
+    if "text/event-stream" not in request.accept_mimetypes:
+      abort(400)
+
+    async def send_events():
+        while True:
+            while len(sse_queue) > 0:
+                data = sse_queue.pop(0)
+                event = ServerSentEvent(data)
+                yield event.encode()
+            await sleep(0.5)
+
+    response = await make_response(
+        send_events(),
+        {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Transfer-Encoding": "chunked",
+        },
+    )
+    response.timeout = None
+    return response
+
 async def fit_shot(shot_id, update_db=False):
     images, data = await db.load_images(mongo.db, fs, shot_id)
     config = {}
@@ -50,6 +80,8 @@ async def fit_shot(shot_id, update_db=False):
         # only replace the fit."name".result subdocument
         update = {"fit.{}.result".format(k): v  for k, v in result.items()}
         await db.update_shot(mongo.db, shot_id, update)
+
+        sse_queue.append(shot_id)
 
     return result
 

@@ -13,11 +13,10 @@ async def load_shot(db, id, require_image=False):
     """
 
     if id is not None:
+        id = id.replace('-', '_')
         if not re.match(r'^\d{4}_\d{2}_\d{2}_\d+$', id):
-            raise ValueError('Invalid shot format. Please use YYYY_MM_DD_shotnumber.')
+            raise ValueError('Invalid shot format. Expecting YYYY_MM_DD_shotnumber but got {}'.format(id))
         data = await db.shots.find_one({'_id': id})
-        if require_image and 'images' not in data:
-            raise ValueError('Shot {} does not have images.'.format(id))
     elif require_image:
         data = await db.shots.find_one({'images': {'$exists': True}}, sort=[('time', -1)])
     else:
@@ -25,6 +24,9 @@ async def load_shot(db, id, require_image=False):
 
     if data is None:
         raise ValueError('Shot {} not found.'.format(id))
+    
+    if require_image and 'images' not in data:
+        raise ValueError('Shot {} does not have images.'.format(id))
     
     return data
 

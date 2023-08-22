@@ -1,41 +1,85 @@
 <title>ImfitTre</title>
 
 <script>
+// @ts-nocheck
+
     import { JsonView } from '@zerodevx/svelte-json-view';
+    import { onMount } from 'svelte';
+
+    function subscribe() {
+        const sse = new EventSource('http://localhost:5000/sse');
+        sse.onmessage = function (event) {
+            console.log(event.data);
+            if (autoload) {
+                loadShotData();
+            }
+        };
+        return () => sse.close();
+    }
     
-    let autoload = false;
-    let date = new Date().toISOString().substring(0, 10);
-    let shotNumber = "";
+    let autoload;
+    let date;
+    let shotNumber;
 
-    let shotData = {};
+    let minOD = 0.0;
+    let maxOD = 1.0;
+    
+    $: shotId = date + '_' + shotNumber;
 
-    async function loadShotData() {
-        const response = await fetch('https://jsonplaceholder.typicode.com/todos');
-        shotData = await response.json();
+    let shotData;
+
+    onMount(() => {
+        autoload = true;
+        loadShotData();
+        subscribe();
+    });
+
+    async function loadShotData(id="") {
+        let url;
+        if (id === "") {
+            url = 'http://localhost:5000/shot?require_image=True';
+        } else {
+            url = 'http://localhost:5000/shot?require_image=True&shot_id=' + id;
+        }
+        try {
+            shotData = await fetch(url).then(res => res.json());
+        } catch (error) {
+            shotData = {
+                error: error.toString(),
+                url: url
+            };
+        }
+
+        if (id === "") {
+            date = shotData._id.substring(0, 10).replaceAll('_', '-');
+            shotNumber = shotData._id.substring(11);
+        }
     }
 
-    // load data on page load
-    loadShotData();
-
-    function handleLoad() {
-        if (autoload) {
-            loadShotData();
-        } else {
-            console.log(`Loading shot ${shotNumber} from ${date}`);
+    // when date or shotNumber changes, load new shot data if autoload is disabled
+    $: if ((!autoload)) {
+        if (date !== undefined && shotNumber !== undefined) {
+            loadShotData(shotId);
         }
     }
     
-    /** @type {Array<Record<string, any>>} */
-    let images = [];
-    for (let i = 0; i < 5; i++) {
-        const element = {
-            url: 'https://chefsmandala.com/wp-content/uploads/2018/03/Crab.jpg',
+    // load new images reactive to shotData
+    let images = []
+    $: if (shotData !== undefined) {
+        images = [];
+        const fits = shotData.fit;
+        for (const fit in fits) {
+            const N = Math.round(fits[fit].result.derived.N);
+            const element = {
+            url: `http://localhost:5000/frame?shot_id=${shotData._id}&frame=${fit}&min_val=${minOD}&max_val=${maxOD}`,
+            title: fit,
             metadata: {
-                title: 'Image ' + i,
-                description: 'This is image ' + i
+                N: N,
+                fit: fits[fit]
             }
         };
         images.push(element);
+        }
     }
 </script>
 
@@ -104,20 +148,31 @@
     <form>
         <label>
             Autoload:
-            <input type="checkbox" bind:checked={autoload} />
+            <input type="checkbox" bind:checked={autoload}/>
         </label>
         <label>
             Date:
-            <input type="date" bind:value={date} disabled={autoload} on:change={loadShotData} />
+            <input type="date" bind:value={date} disabled={autoload}/>
         </label>
         <label>
             Shot:
-            <input type="number" bind:value={shotNumber} disabled={autoload} min="0" max="10000" style="max-width: 5em;" on:change={loadShotData} />
+            <input type="number" bind:value={shotNumber} disabled={autoload} min="0" max="10000" style="max-width: 5em;"/>
         </label>
     </form>
+    <br>
+    <div style="display: flex; flex-direction: row; align-items:center; justify-content: left; flex-wrap: wrap;">
+        <label>
+            Min OD:
+            <input type="number" min="-0.3" max={maxOD} bind:value={minOD} step="0.1" style="max-width: 3em;">
+        </label>
+        <label>
+            Max OD:
+            <input type="number" min={minOD} max="3.0" bind:value={maxOD} step="0.1" style="max-width: 3em;">
+        </label>
+    </div>
     <hr>
     <div style="overflow-y: scroll;">
-        <JsonView json={shotData} />
+        <JsonView json={shotData} depth=1/>
     </div>
 </nav>
 
@@ -125,10 +180,10 @@
     <div style="column-count: 2">
         {#each images as image}
             <div class="image-container" style="display: block; break-inside: avoid;">
-                <h2>{image.metadata.title}</h2>
+                <h2>{image.title}</h2>
                 <img class="image" src={image.url} alt={image.metadata.title} />
                 <div class="metadata">
-                    <JsonView json={image.metadata} />
+                    <JsonView json={image.metadata} depth=1/>
                 </div>
             </div>
         {/each} 
