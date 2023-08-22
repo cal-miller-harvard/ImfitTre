@@ -21,7 +21,7 @@
     let date;
     let shotNumber;
 
-    let minOD = 0.0;
+    let minOD = -0.1;
     let maxOD = 1.0;
     
     $: shotId = date + '_' + shotNumber;
@@ -56,6 +56,19 @@
         }
     }
 
+    function autoOD() {
+        minOD = 1000;
+        maxOD = -1000;
+        for (const image of images) {
+            const result = image.metadata.fit.result;
+            const min_fit_OD = result.params.offset - 0.1
+            const max_fit_OD = result.params.offset + result.params.A + 0.1
+            minOD = Math.min(minOD, min_fit_OD);
+            maxOD = Math.max(maxOD, max_fit_OD);
+            console.log(minOD, maxOD);
+        }
+    }
+
     // when date or shotNumber changes, load new shot data if autoload is disabled
     $: if ((!autoload)) {
         if (date !== undefined && shotNumber !== undefined) {
@@ -73,7 +86,8 @@
         for (const fit in fits) {
             const N = Math.round(fits[fit].result.derived.N);
             const element = {
-            url: `http://localhost:5000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}`,
+            id: fit,
+            url: `http://localhost:5000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}&show_fit=True&width=300`,
             title: fit,
             metadata: {
                 N: N,
@@ -98,6 +112,8 @@
         width: 100%;
         margin-bottom: 10px;
         image-rendering: pixelated;
+        background-repeat: no-repeat;
+        background-size: contain;
     }
 
     .metadata {
@@ -165,12 +181,13 @@
     <div style="display: flex; flex-direction: row; align-items:center; justify-content: left; flex-wrap: wrap;">
         <label>
             Min OD:
-            <input type="number" min="-0.3" max={maxOD} bind:value={minOD} step="0.1" style="max-width: 3em;">
+            <input type="number" min="-0.3" max={maxOD} bind:value={minOD} step="0.1" style="max-width: 5em;">
         </label>
         <label>
             Max OD:
-            <input type="number" min={minOD} max="3.0" bind:value={maxOD} step="0.1" style="max-width: 3em;">
+            <input type="number" min={minOD} max="3.0" bind:value={maxOD} step="0.1" style="max-width: 5em;">
         </label>
+        <button on:click={autoOD}>Auto OD</button>
     </div>
     <hr>
     <div style="overflow-y: scroll;">
@@ -183,7 +200,7 @@
         {#each images as image}
             <div class="image-container" style="display: block; break-inside: avoid;">
                 <h2>{image.title}</h2>
-                <img class="image" src={image.url} alt={image.metadata.title} />
+                <canvas class="image" style="background-image: url('{image.url}')" id={image.id}></canvas>
                 <div class="metadata">
                     <JsonView json={image.metadata} depth=1/>
                 </div>

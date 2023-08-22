@@ -34,8 +34,18 @@ async def frame():
     max_val = request.args.get('max_val', None)
     min_val = request.args.get('min_val', None)
     cmap = request.args.get('cmap', "inferno")
+    show_fit = request.args.get('show_fit', False)
+    width = request.args.get('width', None)
+    height = request.args.get('height', None)
 
-    # config = calibrations.default_fit[image]
+    if min_val is not None:
+        min_val = float(min_val)
+    if max_val is not None:
+        max_val = float(max_val)
+    if width is not None:
+        width = int(width)
+    if height is not None:
+        height = int(height)
 
     images, data = await db.load_images(mongo.db, fs, shot_id, camera)
 
@@ -53,5 +63,10 @@ async def frame():
         frame_num = config["frames"][type]
         array = ip.crop_frame(images[camera][frame_num], config)
 
-    output = ip.array_to_png(array, max_val, min_val, cmap)
+    output = ip.array_to_png(array, max_val, min_val, cmap, width, height)
+    
+    if show_fit:
+        fit = data["fit"][image]
+        output = ip.fit_to_image(fit, background=output)
+
     return await send_file(output, mimetype='image/png')
