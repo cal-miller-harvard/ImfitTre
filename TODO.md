@@ -1,6 +1,2 @@
-- [ ] Make a nice dashboard with working controls
-- [ ] Display a tree of the JSON data on the dashboard
-- [ ] Add crosshairs to the images, with positions controllable by the user or config file
-- [ ] Display the fit results
-- [ ] Configure fits and display based on configs in the database
 - [ ] Figure out how to automatically run the webserver and make it accessible on the local network
+- [ ] Add crosshairs to the images, with positions controllable by the user or fit result

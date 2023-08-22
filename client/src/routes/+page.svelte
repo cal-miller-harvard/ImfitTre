@@ -61,6 +61,8 @@
         if (date !== undefined && shotNumber !== undefined) {
             loadShotData(shotId);
         }
+    } else {
+        loadShotData()
     }
     
     // load new images reactive to shotData
@@ -71,7 +73,7 @@
         for (const fit in fits) {
             const N = Math.round(fits[fit].result.derived.N);
             const element = {
-            url: `http://localhost:5000/frame?shot_id=${shotData._id}&frame=${fit}&min_val=${minOD}&max_val=${maxOD}`,
+            url: `http://localhost:5000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}`,
             title: fit,
             metadata: {
                 N: N,

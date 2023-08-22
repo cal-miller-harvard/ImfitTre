@@ -35,9 +35,14 @@ async def frame():
     min_val = request.args.get('min_val', None)
     cmap = request.args.get('cmap', "inferno")
 
-    config = calibrations.default_fit[image]
+    # config = calibrations.default_fit[image]
 
     images, data = await db.load_images(mongo.db, fs, shot_id, camera)
+
+    if "fit" in data and image in data["fit"]:
+        config = data["fit"][image]["config"]
+    else:
+        config = calibrations.default_fit[image]
 
     if camera is None:
         camera = list(images.keys())[0]
