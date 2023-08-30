@@ -111,7 +111,7 @@
     .image {
         width: 100%;
         margin-bottom: 10px;
-        /* image-rendering: pixelated; */
+        image-rendering: pixelated;
         background-repeat: no-repeat;
         background-size: contain;
     }
