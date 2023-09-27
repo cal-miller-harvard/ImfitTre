@@ -2,10 +2,12 @@ from quart import Quart
 from quart_mongo import Mongo
 from quart_cors import cors
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from influxdb_flask import InfluxDB
 
 from config import Config
 
 mongo = Mongo()
+influx_db = InfluxDB()
 
 async def init_app():
     """Create Flask application."""
@@ -14,6 +16,7 @@ async def init_app():
     app.config.from_object(Config)
 
     mongo.init_app(app)
+    influx_db.init_app(app)
 
     async with app.app_context():
         # Import parts of our application

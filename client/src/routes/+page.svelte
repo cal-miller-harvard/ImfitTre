@@ -7,7 +7,7 @@
     import { onMount } from 'svelte';
 
     function subscribe() {
-        const sse = new EventSource('http://localhost:5000/sse');
+        const sse = new EventSource('http://192.168.107.24:8000/sse');
         sse.onmessage = function (event) {
             console.log(event.data);
             if (autoload) {
@@ -37,9 +37,9 @@
     async function loadShotData(id="") {
         let url;
         if (id === "") {
-            url = 'http://localhost:5000/shot?require_image=True';
+            url = 'http://192.168.107.24:8000/shot?require_image=True';
         } else {
-            url = 'http://localhost:5000/shot?require_image=True&shot_id=' + id;
+            url = 'http://192.168.107.24:8000/shot?require_image=True&shot_id=' + id;
         }
         try {
             shotData = await fetch(url).then(res => res.json());
@@ -87,7 +87,7 @@
             const N = Math.round(fits[fit].result.derived.N);
             const element = {
             id: fit,
-            url: `http://localhost:5000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}&show_fit=True&width=300`,
+            url: `http://192.168.107.24:8000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}&show_fit=True&width=300`,
             title: fit,
             metadata: {
                 N: N,

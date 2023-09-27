@@ -1,6 +1,7 @@
 from quart import Blueprint, request, abort, make_response
 from quart import current_app as app
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from imfittre.fit import image_fit as imfit
 from imfittre import calibrations
@@ -10,7 +11,7 @@ from imfittre.helpers.server_sent_events import ServerSentEvent
 
 from asyncio import sleep
 
-from .. import mongo
+from .. import mongo, influx_db
 
 fit_bp = Blueprint(
     'fit_bp',
@@ -70,7 +71,7 @@ async def sse():
 async def fit_shot(shot_id, update_db=False):
     images, data = await db.load_images(mongo.db, fs, shot_id)
     config = {}
-    for k in data["fit"]:
+    for k in data.get("fit", {}):
         config[k] = data["fit"][k]["config"]
     result = imfit.fit(images, data, config)
 
@@ -80,6 +81,35 @@ async def fit_shot(shot_id, update_db=False):
         # only replace the fit."name".result subdocument
         update = {"fit.{}.result".format(k): v  for k, v in result.items()}
         await db.update_shot(mongo.db, shot_id, update)
+
+        # also update influxdb
+        # schema:
+        #   bucket: log
+        #   measurement: fit
+        #   tags: fit name
+        #   fields: derived.n, derived.sigmax_um, derived.sigmay_um, params.x0, params.y0
+        #   time: now
+
+        for k, v in result.items():
+            try:
+                write_api = influx_db.connection.write_api(write_options=SYNCHRONOUS)
+                points = [{
+                    "measurement": "fit",
+                    "tags": {
+                        "fit": k
+                    },
+                    "fields": {
+                        "N": v["derived"]["N"] if "derived" in v and "N" in v["derived"] else None,
+                        "sigmax_um": v["derived"]["sigmax_um"] if "derived" in v and "sigmax_um" in v["derived"] else None,
+                        "sigmay_um": v["derived"]["sigmay_um"] if "derived" in v and "sigmay_um" in v["derived"] else None,
+                        "x0_px": v["params"]["x0"] if "params" in v and "x0" in v["params"] else None,
+                        "y0_px": v["params"]["y0"] if "params" in v and "y0" in v["params"] else None
+                    }
+                }]
+                write_api.write(bucket="log", record=points)
+            except KeyError as e:
+                print(f"Error: {e} not found in {k} result")
+                continue
 
         sse_queue.append(shot_id)
 
