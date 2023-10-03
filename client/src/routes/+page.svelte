@@ -39,7 +39,7 @@
         if (id === "") {
             url = 'http://192.168.107.24:8000/shot?require_image=True';
         } else {
-            url = 'http://192.168.107.24:8000/shot?require_image=True&shot_id=' + id;
+            url = 'http://192.168.107.24:8000/shot?shot_id=' + id;
         }
         try {
             shotData = await fetch(url).then(res => res.json());
@@ -84,7 +84,13 @@
         images = [];
         const fits = shotData.fit;
         for (const fit in fits) {
-            const N = Math.round(fits[fit].result.derived.N);
+            let N = 0;
+            try {
+                N = Math.round(fits[fit].result.derived.N);
+            } catch (error) {
+                console.log(error);
+                continue;
+            }
             const element = {
             id: fit,
             url: `http://192.168.107.24:8000/frame?shot_id=${shotData._id}&image=${fit}&min_val=${minOD}&max_val=${maxOD}&show_fit=True&width=300`,
