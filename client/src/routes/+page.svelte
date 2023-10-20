@@ -6,17 +6,13 @@
     import { JsonView } from '@zerodevx/svelte-json-view';
     import { onMount } from 'svelte';
 
-    function subscribe() {
-        const sse = new EventSource('http://192.168.107.24:8000/sse');
-        sse.onmessage = function (event) {
-            console.log(event.data);
-            if (autoload) {
-                loadShotData();
-            }
-        };
-        return () => sse.close();
+    async function poll_for_new_data() {
+        if (autoload) {
+            loadShotData();
+        }
+        setTimeout(poll_for_new_data, 2000);
     }
-    
+
     let autoload;
     let date;
     let shotNumber;
@@ -31,7 +27,7 @@
     onMount(() => {
         autoload = true;
         loadShotData();
-        subscribe();
+        poll_for_new_data();
     });
 
     async function loadShotData(id="") {
