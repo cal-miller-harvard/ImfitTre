@@ -8,15 +8,15 @@ class Gaussian(Fit):
         self,
         x,
         y,
-        x0=0,
-        y0=0,
-        A=0,
-        sigmax=0,
-        sigmay=0,
-        theta=0,
-        offset=0,
-        gradx=0,
-        grady=0,
+        x0=0.0,
+        y0=0.0,
+        A=0.0,
+        sigmax=0.0,
+        sigmay=0.0,
+        theta=0.0,
+        offset=0.0,
+        gradx=0.0,
+        grady=0.0,
     ):
         """A 2D Gaussian function with a linear background.
 
@@ -50,7 +50,7 @@ class Gaussian(Fit):
         )
 
     def post_process(self):
-        res = self.result["params"]
+        res = self.result.get("params", {})
         im_data = self.data
 
         # Note that this will only work for equal x and y binning
@@ -77,7 +77,18 @@ class Gaussian(Fit):
 
 class FermiDirac3D(Fit):
     def fit_function(
-        self, x, y, x0=0, y0=0, n0=0, z=0, sigx=0, sigy=0, offset=0, gradx=0, grady=0
+        self,
+        x,
+        y,
+        x0=0.0,
+        y0=0.0,
+        n0=0.0,
+        z=0.0,
+        sigx=0.0,
+        sigy=0.0,
+        offset=0.0,
+        gradx=0.0,
+        grady=0.0,
     ):
         """A 3D Fermi-Dirac distribution with a linear background.
 
@@ -109,6 +120,9 @@ class FermiDirac3D(Fit):
             + gradx * x
             + grady * y
         )
+
+    def pre_process(self):
+        pass
 
     def post_process(self):
         res = self.result["params"]

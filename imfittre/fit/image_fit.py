@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from inspect import signature
 from abc import ABC, abstractmethod
+from skimage.feature import peak_local_max
 
 from imfittre.helpers import image_process as ip
 from imfittre.fit import fit_functions as ff
@@ -37,17 +38,28 @@ class Fit(ABC):
         self.image = image
         self.data = data
         self.config = config
-        self.frame = config.get("frame", "OD")
+        frame = config.get("frame", "OD")
         self.region = config.get("region", None)
 
         self.params = config.get("params", None)
         if self.params is None:
             raise ValueError("No parameters given for fit.")
 
-        self.result = None
+        self.binning = self.data["binning"][0]
+
+        if frame == "OD":
+            self.frame = ip.calculateOD(self.image, self.data, self.config)
+        else:
+            self.frame = ip.crop_frame(
+                self.image[self.config["frames"][frame]],
+                self.config,
+                binning=self.binning,
+            )
+
+        self.result = {}
 
     @abstractmethod
-    def fit_function(self, x, y, **kwargs):
+    def fit_function(self, x, y, **kwargs) -> np.ndarray:
         """The function to fit. Must be implemented in subclasses.
 
         Args:
@@ -60,22 +72,29 @@ class Fit(ABC):
         """
         pass
 
+    def pre_process(self):
+        """Pre-processing, including finding missing parameters."""
+        region = self.config.get("region", None)
+        peak = peak_local_max(self.frame, min_distance=15, num_peaks=1)
+        if "x0" not in self.params and region is not None:
+            self.params["x0"] = (
+                peak[0][1],
+                region["xc"] - region["width"] / 2,
+                region["xc"] + region["width"] / 2,
+            )
+        if "y0" not in self.params and region is not None:
+            self.params["y0"] = (
+                peak[0][0],
+                region["yc"] - region["height"] / 2,
+                region["yc"] + region["height"] / 2,
+            )
+
     @abstractmethod
     def post_process(self):
         """Post-processes the fit, calculating any necessary derived values. Must be implemented in subclasses."""
         pass
 
     def fit(self):
-        binning = self.data["binning"][0]
-
-        if self.frame == "OD":
-            frame = ip.calculateOD(self.image, self.data, self.config)
-        else:
-            frame = ip.crop_frame(
-                self.image[self.config["frames"][self.frame]],
-                self.config,
-                binning=binning,
-            )
 
         p0 = []
         pmin = []
@@ -113,15 +132,15 @@ class Fit(ABC):
             y_offset = 0
 
         # in unbinned pixels
-        x = np.arange(frame.shape[1]) * binning + x_offset
-        y = np.arange(frame.shape[0]) * binning + y_offset
+        x = np.arange(self.frame.shape[1]) * self.binning + x_offset
+        y = np.arange(self.frame.shape[0]) * self.binning + y_offset
 
         X, Y = np.meshgrid(x, y)
 
         def loss(params):
             for p in posargs:
                 kwargs[p] = params[posargs[p]]
-            return self.fit_function(X, Y, **kwargs).flatten() - frame.flatten()
+            return self.fit_function(X, Y, **kwargs).flatten() - self.frame.flatten()
 
         result = least_squares(loss, p0, bounds=(pmin, pmax))
 
@@ -155,12 +174,15 @@ def fit(image, data, config):
 
         if fit_config["fit_function"] == "Gaussian":
             fit_class = ff.Gaussian
+        elif fit_config["fit_function"] == "FermiDirac3D":
+            fit_class = ff.FermiDirac3D
         else:
             raise ValueError(
                 "Fit function {} not recognized.".format(fit_config["function"])
             )
 
         f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
+        f.pre_process()
         f.fit()
         f.post_process()
         fits[name] = f.result

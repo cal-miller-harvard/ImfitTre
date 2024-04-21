@@ -13,30 +13,31 @@ from asyncio import sleep
 
 from .. import mongo, influx_db
 
-fit_bp = Blueprint(
-    'fit_bp',
-    __name__
-)
+fit_bp = Blueprint("fit_bp", __name__)
 
 sse_queue = []
+
 
 async def watch_shots():
     """Watches the database for new shots and updates the list of shots."""
 
     # TODO: This should be an update operation, but it seems it is a replace in the change stream. This works for now, but we should figure out why.
-    pipeline = [{
-            "$match": { 
+    pipeline = [
+        {
+            "$match": {
                 "$and": [
                     {"operationType": "replace"},
-                    {"fullDocument.images": {"$exists": True}}
+                    {"fullDocument.images": {"$exists": True}},
                 ]
             }
-        }]
+        }
+    ]
     async with mongo.db.shots.watch(pipeline) as stream:
         async for change in stream:
             shot_id = change["documentKey"]["_id"]
             print("Fitting shot {}".format(shot_id))
             await fit_shot(shot_id, update_db=True)
+
 
 @fit_bp.before_app_serving
 async def create_fs():
@@ -44,10 +45,11 @@ async def create_fs():
     fs = AsyncIOMotorGridFSBucket(mongo.db)
     app.add_background_task(watch_shots)
 
-@fit_bp.route('/sse')
+
+@fit_bp.route("/sse")
 async def sse():
     if "text/event-stream" not in request.accept_mimetypes:
-      abort(400)
+        abort(400)
 
     async def send_events():
         while True:
@@ -68,6 +70,7 @@ async def sse():
     response.timeout = None
     return response
 
+
 async def fit_shot(shot_id, update_db=False):
     images, data = await db.load_images(mongo.db, fs, shot_id)
     config = {}
@@ -79,7 +82,7 @@ async def fit_shot(shot_id, update_db=False):
 
     if update_db:
         # only replace the fit."name".result subdocument
-        update = {"fit.{}.result".format(k): v  for k, v in result.items()}
+        update = {"fit.{}.result".format(k): v for k, v in result.items()}
         await db.update_shot(mongo.db, shot_id, update)
 
         # also update influxdb
@@ -93,19 +96,39 @@ async def fit_shot(shot_id, update_db=False):
         for k, v in result.items():
             try:
                 write_api = influx_db.connection.write_api(write_options=SYNCHRONOUS)
-                points = [{
-                    "measurement": "fit",
-                    "tags": {
-                        "fit": k
-                    },
-                    "fields": {
-                        "N": v["derived"]["N"] if "derived" in v and "N" in v["derived"] else None,
-                        "sigmax_um": v["derived"]["sigmax_um"] if "derived" in v and "sigmax_um" in v["derived"] else None,
-                        "sigmay_um": v["derived"]["sigmay_um"] if "derived" in v and "sigmay_um" in v["derived"] else None,
-                        "x0_px": v["params"]["x0"] if "params" in v and "x0" in v["params"] else None,
-                        "y0_px": v["params"]["y0"] if "params" in v and "y0" in v["params"] else None
+                points = [
+                    {
+                        "measurement": "fit",
+                        "tags": {"fit": k},
+                        "fields": {
+                            "N": (
+                                v["derived"]["N"]
+                                if "derived" in v and "N" in v["derived"]
+                                else None
+                            ),
+                            "sigmax_um": (
+                                v["derived"]["sigmax_um"]
+                                if "derived" in v and "sigmax_um" in v["derived"]
+                                else None
+                            ),
+                            "sigmay_um": (
+                                v["derived"]["sigmay_um"]
+                                if "derived" in v and "sigmay_um" in v["derived"]
+                                else None
+                            ),
+                            "x0_px": (
+                                v["params"]["x0"]
+                                if "params" in v and "x0" in v["params"]
+                                else None
+                            ),
+                            "y0_px": (
+                                v["params"]["y0"]
+                                if "params" in v and "y0" in v["params"]
+                                else None
+                            ),
+                        },
                     }
-                }]
+                ]
                 write_api.write(bucket="log", record=points)
             except KeyError as e:
                 print(f"Error: {e} not found in {k} result")
@@ -115,10 +138,11 @@ async def fit_shot(shot_id, update_db=False):
 
     return result
 
-@fit_bp.route('/fit')
+
+@fit_bp.route("/fit")
 async def fit():
-    shot_id = request.args.get('shot_id', None)
-    update_db = request.args.get('update_db', False)
+    shot_id = request.args.get("shot_id", None)
+    update_db = request.args.get("update_db", False)
 
     result = await fit_shot(shot_id, update_db)
     return result
