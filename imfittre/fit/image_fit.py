@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from skimage.feature import peak_local_max
 
 from imfittre.helpers import image_process as ip
-from imfittre.fit import fit_functions as ff
 
 STATUS_DICT = {
     -1: "improper input parameters status returned from MINPACK",
@@ -151,6 +150,9 @@ class Fit(ABC):
             kwargs[p] = result.x[posargs[p]]
 
         self.result = {"params": kwargs, "status": STATUS_DICT[result.status]}
+
+
+from imfittre.fit import fit_functions as ff
 
 
 def fit(image, data, config):
