@@ -160,12 +160,13 @@ def fit(image, data, config):
         if fit_config["fit_function"] == "Gaussian":
             fit_class = ff.Gaussian
         else:
-            raise ValueError(
-                "Fit function {} not recognized.".format(fit_config["function"])
-            )
+            fit_class = None
 
-        f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
-        f.fit()
-        f.post_process()
-        fits[name] = f.result
+        if fit_class is not None:
+            f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
+            f.fit()
+            f.post_process()
+            fits[name] = f.result
+        else:
+            fits[name] = f"Fit function {fit_config['fit_function']} not recognized."
     return fits
