@@ -78,14 +78,14 @@ class Fit(ABC):
         if "x0" not in self.params and region is not None:
             self.params["x0"] = (
                 peak[0][1],
-                region["xc"] - region["width"] / 2,
-                region["xc"] + region["width"] / 2,
+                region["xc"] - region["w"] / 2,
+                region["xc"] + region["w"] / 2,
             )
         if "y0" not in self.params and region is not None:
             self.params["y0"] = (
                 peak[0][0],
-                region["yc"] - region["height"] / 2,
-                region["yc"] + region["height"] / 2,
+                region["yc"] - region["h"] / 2,
+                region["yc"] + region["h"] / 2,
             )
 
     @abstractmethod
