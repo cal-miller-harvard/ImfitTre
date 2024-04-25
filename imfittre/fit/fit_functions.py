@@ -59,8 +59,8 @@ class Gaussian(Fit):
         lmda = self.config["calibrations"]["lambda_m"]
 
         derived = {}
-        derived["sigmax_um"] = res["sigmax"] * px_size
-        derived["sigmay_um"] = res["sigmay"] * px_size
+        derived["sigmax_um"] = res["sigmax"] * px_size / self.binning
+        derived["sigmay_um"] = res["sigmay"] * px_size / self.binning
         derived["N"] = (
             (1 / eff)
             * 2
@@ -134,8 +134,8 @@ class FermiDirac3D(Fit):
         lmda = self.config["calibrations"]["lambda_m"]
 
         derived = {}
-        derived["sigmax_um"] = res["sigmax"] * px_size
-        derived["sigmay_um"] = res["sigmay"] * px_size
+        derived["sigmax_um"] = res["sigmax"] * px_size / self.binning
+        derived["sigmay_um"] = res["sigmay"] * px_size / self.binning
         derived["ToverTF"] = -1 / (6 * polylog(3, -res["z"]))
 
         self.result["derived"] = derived
