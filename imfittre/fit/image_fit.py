@@ -43,6 +43,8 @@ class Fit(ABC):
         if self.params is None:
             raise ValueError("No parameters given for fit.")
 
+        self.binning = self.data["binning"][0]
+
         self.result = None
 
     @abstractmethod
