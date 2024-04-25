@@ -4,7 +4,8 @@ from matplotlib import pyplot as plt
 from io import BytesIO
 from PIL import Image, ImageDraw
 
-def crop_frame(frame, config, binning=1):
+
+def crop_frame(frame, config, binning=(1, 1)):
     """Crops a frame according to the given config. If no region is given, the entire frame is returned.
 
     Args:
@@ -14,25 +15,26 @@ def crop_frame(frame, config, binning=1):
             yc (int): The y coordinate of the center of the crop.
             w (int): The width of the crop.
             h (int): The height of the crop.
-        binning (int, optional): The bin size of the frame. Defaults to 1.
+        binning (tuple, optional): The bin sizes of the frame in the horizontal and vertical directions. Defaults to (1,1).
 
     Returns:
         numpy.ndarray: The cropped frame.
     """
     if "region" not in config:
         return frame
-    
-    xc = config["region"]["xc"] // binning
-    yc = config["region"]["yc"] // binning
-    w = config["region"]["w"] // binning
-    h = config["region"]["h"] // binning
 
-    xmin = max(0, xc-w//2)
-    xmax = min(frame.shape[1], xc+w//2)
-    ymin = max(0, yc-h//2)
-    ymax = min(frame.shape[0], yc+h//2)
+    xc = config["region"]["xc"] // binning[0]
+    yc = config["region"]["yc"] // binning[1]
+    w = config["region"]["w"] // binning[0]
+    h = config["region"]["h"] // binning[1]
+
+    xmin = max(0, xc - w // 2)
+    xmax = min(frame.shape[1], xc + w // 2)
+    ymin = max(0, yc - h // 2)
+    ymax = min(frame.shape[0], yc + h // 2)
 
     return frame[ymin:ymax, xmin:xmax]
+
 
 def calculateOD(image, metadata, config):
     shadow = image[config["frames"]["shadow"]]
@@ -40,8 +42,7 @@ def calculateOD(image, metadata, config):
     dark = image[config["frames"]["dark"]]
     Ceff = config["calibrations"]["csat"]
 
-    # Note that this will only work for equal x and y binning
-    bins = metadata["binning"][0] 
+    bins = metadata["binning"]
 
     shadowCrop = crop_frame(shadow, config, bins)
     lightCrop = crop_frame(light, config, bins)
@@ -49,21 +50,25 @@ def calculateOD(image, metadata, config):
 
     s1 = shadowCrop - darkCrop
     s2 = lightCrop - darkCrop
-    OD = -np.log(s1/s2)
+    OD = -np.log(s1 / s2)
 
-    Ceff *= bins**2
+    Ceff *= bins[0] * bins[1]
 
-    ODCorrected = OD + (s2 - s1)/Ceff
+    ODCorrected = OD + (s2 - s1) / Ceff
 
-    #Set all nans and infs to zero
+    # Set all nans and infs to zero
     ODCorrected[np.isnan(ODCorrected)] = 0
     ODCorrected[np.isinf(ODCorrected)] = 0
 
     return ODCorrected
 
+
 from PIL import Image
 
-def array_to_png(image, max_val=None, min_val=None, cmap="inferno", width=None, height=None):
+
+def array_to_png(
+    image, max_val=None, min_val=None, cmap="inferno", width=None, height=None
+):
     """Converts a numpy array to an HTML image tag.
 
     Args:
@@ -82,21 +87,26 @@ def array_to_png(image, max_val=None, min_val=None, cmap="inferno", width=None, 
     if min_val is None:
         min_val = image.min()
     output = BytesIO()
-    plt.imsave(output, image, cmap=cmap, vmin=min_val, vmax=max_val, format='png')
+    plt.imsave(output, image, cmap=cmap, vmin=min_val, vmax=max_val, format="png")
     output.seek(0)
 
     img = Image.open(output)
     if width is not None and height is not None:
         img = img.resize((width, height), resample=Image.NEAREST)
     elif width is not None:
-        img = img.resize((width, img.height * width // img.width), resample=Image.NEAREST)
+        img = img.resize(
+            (width, img.height * width // img.width), resample=Image.NEAREST
+        )
     elif height is not None:
-        img = img.resize((img.width * height // img.height, height), resample=Image.NEAREST)
+        img = img.resize(
+            (img.width * height // img.height, height), resample=Image.NEAREST
+        )
     output = BytesIO()
-    img.save(output, format='png')
+    img.save(output, format="png")
     output.seek(0)
 
     return output
+
 
 def fit_to_image(fit, background=None, color="white", thickness=1):
     """Draws an image overlay with the given fit parameters.
@@ -125,22 +135,40 @@ def fit_to_image(fit, background=None, color="white", thickness=1):
         background.seek(0)
         img = Image.open(background)
 
-    # Extract the fit parameters 
+    # Extract the fit parameters
     scale_factor = img.width / w
-    x0 = (fit["result"]["params"]["x0"] - xc + w//2) * scale_factor
-    y0 = (fit["result"]["params"]["y0"] - yc + h//2) * scale_factor
+    x0 = (fit["result"]["params"]["x0"] - xc + w // 2) * scale_factor
+    y0 = (fit["result"]["params"]["y0"] - yc + h // 2) * scale_factor
     sigmax = fit["result"]["params"]["sigmax"] * scale_factor
     sigmay = fit["result"]["params"]["sigmay"] * scale_factor
     theta = fit["result"]["params"]["theta"]
 
     # Draw the crosshair
     draw = ImageDraw.Draw(img)
-    draw.line((x0-sigmax*np.cos(theta), y0-sigmax*np.sin(theta), x0+sigmax*np.cos(theta), y0+sigmax*np.sin(theta)), fill=color, width=int(thickness))
-    draw.line((x0-sigmay*np.sin(theta), y0+sigmay*np.cos(theta), x0+sigmay*np.sin(theta), y0-sigmay*np.cos(theta)), fill=color, width=int(thickness))
+    draw.line(
+        (
+            x0 - sigmax * np.cos(theta),
+            y0 - sigmax * np.sin(theta),
+            x0 + sigmax * np.cos(theta),
+            y0 + sigmax * np.sin(theta),
+        ),
+        fill=color,
+        width=int(thickness),
+    )
+    draw.line(
+        (
+            x0 - sigmay * np.sin(theta),
+            y0 + sigmay * np.cos(theta),
+            x0 + sigmay * np.sin(theta),
+            y0 - sigmay * np.cos(theta),
+        ),
+        fill=color,
+        width=int(thickness),
+    )
 
     # Convert the image to a png
     output = BytesIO()
-    img.save(output, format='png')
+    img.save(output, format="png")
     output.seek(0)
 
     return output

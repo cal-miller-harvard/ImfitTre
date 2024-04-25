@@ -44,15 +44,13 @@ class Fit(ABC):
         if self.params is None:
             raise ValueError("No parameters given for fit.")
 
-        self.binning = self.data["binning"][0]
-
         if frame == "OD":
             self.frame = ip.calculateOD(self.image, self.data, self.config)
         else:
             self.frame = ip.crop_frame(
                 self.image[self.config["frames"][frame]],
                 self.config,
-                binning=self.binning,
+                binning=self.data["binning"],
             )
 
         self.result = {}
@@ -131,8 +129,8 @@ class Fit(ABC):
             y_offset = 0
 
         # in unbinned pixels
-        x = np.arange(self.frame.shape[1]) * self.binning + x_offset
-        y = np.arange(self.frame.shape[0]) * self.binning + y_offset
+        x = np.arange(self.frame.shape[1]) * self.data["binning"][0] + x_offset
+        y = np.arange(self.frame.shape[0]) * self.data["binning"][1] + y_offset
 
         X, Y = np.meshgrid(x, y)
 
