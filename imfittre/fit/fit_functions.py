@@ -1,8 +1,22 @@
 import numpy as np
 from imfittre.fit.image_fit import Fit
 
+
 class Gaussian(Fit):
-    def fit_function(self, x, y, x0=0, y0=0, A=0, sigmax=0, sigmay=0, theta=0, offset=0, gradx=0, grady=0):
+    def fit_function(
+        self,
+        x,
+        y,
+        x0=0,
+        y0=0,
+        A=0,
+        sigmax=0,
+        sigmay=0,
+        theta=0,
+        offset=0,
+        gradx=0,
+        grady=0,
+    ):
         """A 2D Gaussian function with a linear background.
 
         Args:
@@ -25,22 +39,36 @@ class Gaussian(Fit):
         y = np.array(y)
         x = x - x0
         y = y - y0
-        xprime = x*np.cos(theta) - y*np.sin(theta)
-        yprime = x*np.sin(theta) + y*np.cos(theta)
-        return A*np.exp(-0.5*(xprime**2/sigmax**2 + yprime**2/sigmay**2)) + offset + gradx*x + grady*y
-    
+        xprime = x * np.cos(theta) - y * np.sin(theta)
+        yprime = x * np.sin(theta) + y * np.cos(theta)
+        return (
+            A * np.exp(-0.5 * (xprime**2 / sigmax**2 + yprime**2 / sigmay**2))
+            + offset
+            + gradx * x
+            + grady * y
+        )
+
     def post_process(self):
         res = self.result["params"]
         im_data = self.data
 
         # Note that this will only work for equal x and y binning
-        px_size = self.config["calibrations"]["px_size_um"]*im_data["binning"][0]
+        px_size = self.config["calibrations"]["px_size_um"] * im_data["binning"][0]
         eff = self.config["calibrations"]["eff"]
         lmda = self.config["calibrations"]["lambda_m"]
 
         derived = {}
-        derived["sigmax_um"] = res["sigmax"]*px_size
-        derived["sigmay_um"] = res["sigmay"]*px_size
-        derived["N"] = (1 / eff) * 2 * res["A"] * (1E-6)**2 * derived["sigmax_um"] * derived["sigmay_um"] * (2*np.pi)**2 / (3*lmda**2)
+        derived["sigmax_um"] = res["sigmax"] * px_size / self.binning
+        derived["sigmay_um"] = res["sigmay"] * px_size / self.binning
+        derived["N"] = (
+            (1 / eff)
+            * 2
+            * res["A"]
+            * (1e-6) ** 2
+            * derived["sigmax_um"]
+            * derived["sigmay_um"]
+            * (2 * np.pi) ** 2
+            / (3 * lmda**2)
+        )
 
         self.result["derived"] = derived

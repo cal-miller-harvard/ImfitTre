@@ -14,9 +14,10 @@ STATUS_DICT = {
     4: "both ftol and xtol termination conditions are satisfied",
 }
 
+
 class Fit(ABC):
     """Base class for fitting functions to data.
-    
+
     Args:
         image (numpy.ndarray): The image to fit.
         data (dict): The image's metadata.
@@ -30,6 +31,7 @@ class Fit(ABC):
             "fit_function" (str): The name of the function to fit. Defaults to "Gaussian".
             "params" (dict): The parameters to use for fitting. Each key should be the name of a parameter and each value should either be a number or a list. If a number is given, the parameter is fixed to that value. If a list is given, it should be of the form [initial value, lower bound, upper bound]. This key is required.
     """
+
     def __init__(self, image, data, config):
         self.image = image
         self.data = data
@@ -40,18 +42,18 @@ class Fit(ABC):
         self.params = config.get("params", None)
         if self.params is None:
             raise ValueError("No parameters given for fit.")
-            
+
         self.result = None
 
     @abstractmethod
     def fit_function(self, x, y, **kwargs):
         """The function to fit. Must be implemented in subclasses.
-        
+
         Args:
             x (numpy.ndarray): The x values at which to evaluate the function.
             y (numpy.ndarray): The y values at which to evaluate the function.
             **kwargs: The parameters of the function.
-        
+
         Returns:
             numpy.ndarray: The function evaluated at x and y.
         """
@@ -59,8 +61,7 @@ class Fit(ABC):
 
     @abstractmethod
     def post_process(self):
-        """Post-processes the fit, calculating any necessary derived values. Must be implemented in subclasses.
-        """
+        """Post-processes the fit, calculating any necessary derived values. Must be implemented in subclasses."""
         pass
 
     def fit(self):
@@ -69,7 +70,11 @@ class Fit(ABC):
         if self.frame == "OD":
             frame = ip.calculateOD(self.image, self.data, self.config)
         else:
-            frame = ip.crop_frame(self.image[self.config["frames"][self.frame]], self.config, binning=binning)
+            frame = ip.crop_frame(
+                self.image[self.config["frames"][self.frame]],
+                self.config,
+                binning=binning,
+            )
 
         p0 = []
         pmin = []
@@ -87,7 +92,7 @@ class Fit(ABC):
                 continue
             if p not in self.params:
                 raise ValueError("Parameter {} not given.".format(p))
-            
+
             if isinstance(self.params[p], list):
                 p0.append(self.params[p][0])
                 pmin.append(self.params[p][1])
@@ -100,8 +105,8 @@ class Fit(ABC):
         # offset X and Y relative to the corner of the region
         # in unbinned pixels
         if self.region is not None:
-            x_offset = self.region["xc"] - self.region["w"]//2
-            y_offset = self.region["yc"] - self.region["h"]//2
+            x_offset = self.region["xc"] - self.region["w"] // 2
+            y_offset = self.region["yc"] - self.region["h"] // 2
         else:
             x_offset = 0
             y_offset = 0
@@ -116,21 +121,20 @@ class Fit(ABC):
             for p in posargs:
                 kwargs[p] = params[posargs[p]]
             return self.fit_function(X, Y, **kwargs).flatten() - frame.flatten()
-        
+
         result = least_squares(loss, p0, bounds=(pmin, pmax))
-        
+
         if result.status < 0:
             raise RuntimeError(STATUS_DICT[result.status])
-        
+
         for p in posargs:
             kwargs[p] = result.x[posargs[p]]
 
-        self.result = {
-            "params": kwargs,
-            "status": STATUS_DICT[result.status]
-        }
+        self.result = {"params": kwargs, "status": STATUS_DICT[result.status]}
+
 
 from imfittre.fit import fit_functions as ff
+
 
 def fit(image, data, config):
     """Fits a given image according to the given config.
@@ -154,8 +158,10 @@ def fit(image, data, config):
         if fit_config["fit_function"] == "Gaussian":
             fit_class = ff.Gaussian
         else:
-            raise ValueError("Fit function {} not recognized.".format(fit_config["function"]))
-        
+            raise ValueError(
+                "Fit function {} not recognized.".format(fit_config["function"])
+            )
+
         f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
         f.fit()
         f.post_process()
