@@ -179,9 +179,7 @@ def fit(image, data, config):
         elif fit_config["fit_function"] == "FermiDirac3D":
             fit_class = ff.FermiDirac3D
         else:
-            raise ValueError(
-                "Fit function {} not recognized.".format(fit_config["function"])
-            )
+            print("Fit function {} not recognized.".format(fit_config["fit_function"]))
 
         f = fit_class(im, data["images"][fit_config["camera"]], fit_config)
         f.pre_process()

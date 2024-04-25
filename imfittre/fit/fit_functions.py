@@ -98,7 +98,7 @@ class FermiDirac3D(Fit):
             x0 (float): The x coordinate of the center of the distribution.
             y0 (float): The y coordinate of the center of the distribution.
             n0 (float): The central density of the distribution.
-            z (float): The fugacity of the distribution.
+            z (float): The fugacity of the gas.
             sigx (float): The standard deviation of the distribution in the x direction.
             sigy (float): The standard deviation of the distribution in the y direction.
             offset (float): The offset of the linear background.
