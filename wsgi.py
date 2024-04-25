@@ -1,4 +1,5 @@
 """Application entry point."""
+
 import quart.flask_patch
 
 from imfittre import init_app

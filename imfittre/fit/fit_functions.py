@@ -1,5 +1,6 @@
 import numpy as np
 from imfittre.fit.image_fit import Fit
+from scipy.special import spence as dilog
 from mpmath import polylog
 
 
@@ -82,10 +83,11 @@ class FermiDirac3D(Fit):
         y,
         x0=0.0,
         y0=0.0,
-        n0=0.0,
+        A=0.0,
         z=0.0,
-        sigx=0.0,
-        sigy=0.0,
+        sigmax=0.0,
+        sigmay=0.0,
+        theta=0.0,
         offset=0.0,
         gradx=0.0,
         grady=0.0,
@@ -97,10 +99,11 @@ class FermiDirac3D(Fit):
             y (numpy.ndarray): The y values at which to evaluate the function.
             x0 (float): The x coordinate of the center of the distribution.
             y0 (float): The y coordinate of the center of the distribution.
-            n0 (float): The central density of the distribution.
+            A (float): The peak OD of the distribution.
             z (float): The fugacity of the gas.
-            sigx (float): The standard deviation of the distribution in the x direction.
-            sigy (float): The standard deviation of the distribution in the y direction.
+            sigmax (float): The standard deviation of the distribution in the x direction.
+            sigmay (float): The standard deviation of the distribution in the y direction.
+            theta (float): The angle of the distribution in radians.
             offset (float): The offset of the linear background.
             gradx (float): The gradient of the linear background in the x direction.
             grady (float): The gradient of the linear background in the y direction.
@@ -112,10 +115,14 @@ class FermiDirac3D(Fit):
         y = np.array(y)
         x = x - x0
         y = y - y0
+        xprime = x * np.cos(theta) - y * np.sin(theta)
+        yprime = x * np.sin(theta) + y * np.cos(theta)
         return (
-            n0
-            * polylog(2, -z * np.exp(-0.5 * (x**2 / sigx**2 + y**2 / sigy**2)))
-            / polylog(2, -z)
+            A
+            * dilog(
+                1 + z * np.exp(-0.5 * (xprime**2 / sigmax**2 + yprime**2 / sigmay**2))
+            )
+            / dilog(1 + z)
             + offset
             + gradx * x
             + grady * y
@@ -136,6 +143,6 @@ class FermiDirac3D(Fit):
         derived = {}
         derived["sigmax_um"] = res["sigmax"] * px_size / self.binning
         derived["sigmay_um"] = res["sigmay"] * px_size / self.binning
-        derived["ToverTF"] = -1 / (6 * polylog(3, -res["z"]))
+        derived["ToverTF"] = -1 / (6 * float(polylog(3, -res["z"])))
 
         self.result["derived"] = derived
